@@ -1,17 +1,28 @@
 import React, { useState } from "react";
-
 import "./style.css";
 
-function Faq({ questions }) {
-  const [current, setCurrent] = useState(null);
+interface Question {
+  question: string;
+  answer: string;
+}
+
+interface FaqProps {
+  questions: Question[];
+}
+
+const Faq: React.FC<FaqProps> = ({ questions }) => {
+  const [current, setCurrent] = useState<number | null>(null);
 
   return (
     <div className="Faq">
       {questions?.map((item, i) => (
         <div
-          className={`Faq__question ${current == i && "Faq__question--open"}`}
+          key={i}
+          className={`Faq__question ${
+            current === i ? "Faq__question--open" : ""
+          }`}
           onClick={() => {
-            setCurrent(current == i ? null : i);
+            setCurrent(current === i ? null : i);
           }}
         >
           <h3>
@@ -37,6 +48,6 @@ function Faq({ questions }) {
       ))}
     </div>
   );
-}
+};
 
 export default Faq;
