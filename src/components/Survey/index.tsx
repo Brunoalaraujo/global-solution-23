@@ -1,63 +1,66 @@
 import { useState } from "react";
 import "./style.css";
 
-export default function Survey({ title, text, quiz }) {
-  const [activeQuestion, setActiveQuestion] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState("");
-  const [showResult, setShowResult] = useState(false);
-  const [selectedAnswerIndex, setSelectedAnswerIndex] = useState(null);
-  const [selectedChoices, setSelectedChoices] = useState([]);
+interface Question {
+  question: string;
+  choices: string[];
+  correctAnswer: string;
+  totalWrongAnswer: string;
+  explanation?: string;
+}
+
+interface Quiz {
+  questions: Question[];
+}
+
+interface SurveyProps {
+  title: string;
+  text: string;
+  quiz: Quiz;
+}
+
+export default function Survey({ title, text, quiz }: SurveyProps) {
+  const [activeQuestion, setActiveQuestion] = useState<number>(0);
+  const [selectedAnswerIndex, setSelectedAnswerIndex] = useState<number | null>(
+    null
+  );
+  const [selectedChoices, setSelectedChoices] = useState<{ answer: string }[]>(
+    []
+  );
   const [result, setResult] = useState({
     score: 0,
     correctAnswers: 0,
     wrongAnswers: 0,
   });
+  const [showResult, setShowResult] = useState<boolean>(false); // Adicionando a definição de estado que faltava
 
   const { questions } = quiz;
   const { question, choices, correctAnswer } = questions[activeQuestion];
 
-  const getAnswerTextColor = (answer, correctAnswer, totalWrongAnswer) => {
-    let color = "orange";
-
-    if (correctAnswer == answer) {
-      color = "green";
-    }
-
-    if (totalWrongAnswer == answer) {
-      color = "red";
-    }
-
-    return color;
-  };
-
   const onClickNext = () => {
+    const selectedAnswer = selectedChoices[activeQuestion]?.answer;
+    const isCorrect = selectedAnswer === correctAnswer;
+
+    setResult((prev) => ({
+      score: isCorrect ? prev.score + 5 : prev.score,
+      correctAnswers: isCorrect ? prev.correctAnswers + 1 : prev.correctAnswers,
+      wrongAnswers: isCorrect ? prev.wrongAnswers : prev.wrongAnswers + 1,
+    }));
+
     setSelectedAnswerIndex(null);
-    setResult((prev) =>
-      selectedAnswer
-        ? {
-            ...prev,
-            score: prev.score + 5,
-            correctAnswers: prev.correctAnswers + 1,
-          }
-        : { ...prev, wrongAnswers: prev.wrongAnswers + 1 }
-    );
+
     if (activeQuestion !== questions.length - 1) {
       setActiveQuestion((prev) => prev + 1);
     } else {
-      setActiveQuestion(0);
       setShowResult(true);
     }
   };
 
-  const onAnswerSelected = (answer, index) => {
+  const onAnswerSelected = (answer: string, index: number) => {
     setSelectedAnswerIndex(index);
-    setSelectedChoices([...selectedChoices, { answer }]);
-
-    if (answer === correctAnswer) {
-      setSelectedAnswer(true);
-    } else {
-      setSelectedAnswer(false);
-    }
+    const newSelectedChoices = [...selectedChoices];
+    newSelectedChoices[activeQuestion] = { answer };
+    setSelectedChoices(newSelectedChoices);
   };
 
   const refreshQuiz = () => {
@@ -65,8 +68,15 @@ export default function Survey({ title, text, quiz }) {
     setActiveQuestion(0);
     setSelectedAnswerIndex(null);
     setSelectedChoices([]);
+    setResult({
+      score: 0,
+      correctAnswers: 0,
+      wrongAnswers: 0,
+    });
   };
-  const addLeadingZero = (number) => (number > 9 ? number : `0${number}`);
+
+  const addLeadingZero = (number: number) =>
+    number > 9 ? number : `0${number}`;
 
   return (
     <div className="quiz-container">
@@ -88,9 +98,11 @@ export default function Survey({ title, text, quiz }) {
               {choices.map((answer, index) => (
                 <li
                   onClick={() => onAnswerSelected(answer, index)}
-                  key={answer}
+                  key={index}
                   className={
-                    selectedAnswerIndex === index ? "selected-answer" : null
+                    selectedAnswerIndex === index
+                      ? "selected-answer"
+                      : undefined
                   }
                 >
                   {answer}
@@ -109,26 +121,16 @@ export default function Survey({ title, text, quiz }) {
         ) : (
           <div className="result">
             <h3>Resultado</h3>
-
+            <p>Pontuação Final: {result.score}</p>
             {questions.map((question, index) => (
-              <div key={question.question}>
+              <div key={index}>
                 <span className="result-question">{question.question}</span>
-                <p
-                  className="result-explanation"
-                  style={{
-                    color: getAnswerTextColor(
-                      selectedChoices[index].answer,
-                      question.correctAnswer,
-                      question.totalWrongAnswer
-                    ),
-                  }}
-                >
-                  {selectedChoices[index].answer}
+                <p className="result-explanation">
+                  {selectedChoices[index]?.answer}
                 </p>
                 <p className="result-explanation">{question.explanation}</p>
               </div>
             ))}
-
             <div className="flex-right">
               <button onClick={refreshQuiz}>Refazer</button>
             </div>

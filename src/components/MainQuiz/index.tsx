@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
-import { QuizDataItem, quizData } from './quizData';
-import { Questions, Result } from './styles';
+import { QuizDataItem, quizData } from "./quizData";
+import { Questions, Result } from "./styles";
 
 export default function MainQuiz() {
   const [myAnswer, setMyAnswer] = useState<string | null>(null);
   const [score, setScore] = useState(0);
-  const [disabled, setDisabled] = useState(false);
+  const [disabled, setDisabled] = useState(true);
   const [isEnd, setIsEnd] = useState(false);
 
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -14,23 +14,27 @@ export default function MainQuiz() {
   const nextQuestionHandler = () => {
     if (questionIndex === quizData.length - 1) {
       setIsEnd(true);
-      return;
+    } else {
+      setQuestionIndex((value) => value + 1);
     }
-    setQuestionIndex((value) => value + 1);
+    setMyAnswer(null);
+    setDisabled(true);
   };
 
   const checkAnswer = (answer: string) => {
     setMyAnswer(answer);
     setDisabled(false);
-    nextQuestionHandler();
   };
 
   useEffect(() => {
-    const { answer } = quizData[questionIndex];
+    if (myAnswer === null) return;
 
-    if (myAnswer === answer) {
-      setScore((value) => value + 1);
+    const correctAnswer = quizData[questionIndex].answer;
+    if (myAnswer === correctAnswer) {
+      setScore((prevScore) => prevScore + 1);
     }
+    // Delay to next question to allow user to see their selected answer
+    setTimeout(() => nextQuestionHandler(), 100);
   }, [myAnswer, questionIndex]);
 
   return (
@@ -38,8 +42,8 @@ export default function MainQuiz() {
       {isEnd ? (
         <Result>
           <h2 className="text-primary mb-4">
-            Fim de jogo, sua pontuação final é{' '}
-            <span className="fw-bolder">{score} pontos </span>!
+            Fim de jogo, sua pontuação final é{" "}
+            <span className="fw-bolder">{score} pontos</span>!
           </h2>
           <div>
             <p className="text-secondary fw-bold fs-5 mb-2">
@@ -57,18 +61,18 @@ export default function MainQuiz() {
       ) : (
         <Questions>
           <h2 className="text-secondary-emphasis mb-4">
-            {quizData[questionIndex].question}{' '}
+            {quizData[questionIndex].question}
           </h2>
           <p className="text-secondary fw-bold fs-5 mb-2">
-            {`Questão ${questionIndex + 1} de ${quizData.length}`}:
+            {`Questão ${questionIndex + 1} de ${quizData.length}`}
           </p>
           <div>
             {quizData[questionIndex].options.map((option, index) => (
               <button
                 key={index}
-                disabled={disabled}
+                disabled={!disabled}
                 className={`btn btn-outline-primary ${
-                  myAnswer === option ? 'selected' : ''
+                  myAnswer === option ? "selected" : ""
                 }`}
                 onClick={() => checkAnswer(option)}
               >
