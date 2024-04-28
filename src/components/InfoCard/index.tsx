@@ -10,7 +10,22 @@ import {
   StyledInfoCardsMainInfo,
 } from "./styles";
 
-export default function InfoCard({ title, text, cards }) {
+interface Card {
+  image: string;
+  title: string;
+  desc?: string;
+  desc2?: string;
+  alt: string;
+  text: string;
+}
+
+interface InfoCardProps {
+  title: string;
+  text: string;
+  cards: Card[];
+}
+
+export default function InfoCard({ title, text, cards }: InfoCardProps) {
   const [currentCard, setCurrentCard] = useState(cards[0]);
 
   return (
